@@ -2,7 +2,7 @@
 import { TankConfig, MapConfig, PowerUpType, Direction, Difficulty, ThemeId, KeyBindings } from './types';
 import { Target, Box, ZapOff, Crosshair, ShieldCheck, Ghost, Heart, Zap, CornerUpLeft, ChevronsRight, Maximize, Shield, Layers, Bomb, Cpu, Bot, Skull, Eye, GripVertical, Activity } from 'lucide-react';
 
-export const GAME_VERSION = "1.9.2";
+export const GAME_VERSION = "1.9.3";
 
 // ==========================================
 // TANK VISUAL DEFINITIONS (SVG PATHS)
@@ -226,10 +226,10 @@ export const TANK_CLASSES: TankConfig[] = [
   { 
     id: 'titan', name: 'Titan', nameZh: '泰坦', icon: ShieldCheck, 
     maxHp: 40, speed: 1.8, width: 58, height: 58, 
-    shootCooldown: 50, maxAmmo: 4, reloadTime: 360, 
+    shootCooldown: 50, maxAmmo: 10, reloadTime: 360, 
     bulletSpeed: 5.5, bulletSize: 28, bulletDamage: 4, bulletColor: '#8b5cf6', 
-    description: 'Tankiest unit. Fires massive slow orbs.', 
-    descriptionZh: '血量之王。发射缓慢的巨型炮弹封路。' 
+    description: 'Tankiest unit. Chance to ricochet.', 
+    descriptionZh: '血量之王。每次受击有30%几率弹开子弹。' 
   },
   { 
     id: 'phantom', name: 'Phantom', nameZh: '幽灵', icon: Ghost, 
@@ -308,6 +308,7 @@ export const TEXT_DICTIONARY = {
     customizeControls: "Configure Controls",
     pressKey: "Press Key...",
     bindingTitle: "Key Bindings",
+    ricochet_text: "RICOCHET",
     [PowerUpType.HEAL]: "+3 HP",
     [PowerUpType.DAMAGE]: "DOUBLE DAMAGE",
     [PowerUpType.RICOCHET]: "RICOCHET",
@@ -354,6 +355,7 @@ export const TEXT_DICTIONARY = {
     customizeControls: "自定义按键",
     pressKey: "请按键...",
     bindingTitle: "按键绑定",
+    ricochet_text: "跳弹",
     [PowerUpType.HEAL]: "+3 生命",
     [PowerUpType.DAMAGE]: "双倍伤害",
     [PowerUpType.RICOCHET]: "弹射子弹",

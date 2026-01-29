@@ -160,6 +160,7 @@ const App: React.FC = () => {
   const handleQuit = useCallback(() => {
     setGameState({ status: GameStatus.MENU, winner: null });
     setIsPaused(false);
+    keysPressed.current.clear(); 
   }, []);
 
   const handleGoToSelect = useCallback((mode: GameMode) => {
@@ -191,14 +192,38 @@ const App: React.FC = () => {
     const handleInteraction = () => { initAudio(); };
     window.addEventListener('click', handleInteraction);
     window.addEventListener('keydown', handleInteraction);
-    const down = (e: KeyboardEvent) => { keysPressed.current.add(e.key); if (e.key === 'Escape') togglePause(); };
-    const up = (e: KeyboardEvent) => keysPressed.current.delete(e.key);
-    window.addEventListener('keydown', down); window.addEventListener('keyup', up);
+    
+    const down = (e: KeyboardEvent) => { 
+        // Normalize single-letter keys to lowercase to handle CapsLock/Shift
+        // Keep special keys like ArrowUp, Enter as is
+        const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        keysPressed.current.add(key); 
+        
+        if (e.key === 'Escape') togglePause(); 
+        
+        // Prevent scrolling with arrow keys/space if they are bound
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+            // Only prevent default if we are in game mode to avoid breaking UI navigation in menus if needed
+            // But since we have a custom UI, it's usually safer to prevent global scroll
+            // e.preventDefault(); 
+        }
+    };
+    const up = (e: KeyboardEvent) => {
+        const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        keysPressed.current.delete(key);
+    };
+    const blur = () => { keysPressed.current.clear(); }; 
+
+    window.addEventListener('keydown', down); 
+    window.addEventListener('keyup', up);
+    window.addEventListener('blur', blur);
+
     return () => { 
         window.removeEventListener('click', handleInteraction); 
         window.removeEventListener('keydown', handleInteraction);
         window.removeEventListener('keydown', down); 
         window.removeEventListener('keyup', up); 
+        window.removeEventListener('blur', blur);
     };
   }, [initAudio, togglePause]);
 
@@ -441,6 +466,30 @@ const App: React.FC = () => {
         if (!destroyed) {
             for (const p of playersRef.current) {
                 if (p.hp > 0 && p.team !== b.team && checkAABB(b, p)) {
+                    // Ricochet Logic for Titan
+                    if (p.tankId === 'titan' && Math.random() < 0.3) {
+                        playSound('deflect');
+                        spawnFloatingText(p.x + p.width/2, p.y - 40, TEXT_DICTIONARY[language].ricochet_text || "RICOCHET", "#fff");
+                        spawnParticle(b.x + b.width/2, b.y + b.height/2, 'spark', '#22d3ee', 10, 4); // Blue sparks
+                        
+                        // Bounce calculation - simple reflection based on relative position
+                        const diffX = Math.abs((b.x + b.width/2) - (p.x + p.width/2));
+                        const diffY = Math.abs((b.y + b.height/2) - (p.y + p.height/2));
+                        
+                        // Move bullet back slightly to avoid re-collision immediately
+                        b.x -= stepVx * 2;
+                        b.y -= stepVy * 2;
+
+                        if (diffX / p.width > diffY / p.height) {
+                            b.vx = -b.vx;
+                        } else {
+                            b.vy = -b.vy;
+                        }
+                        
+                        // IMPORTANT: Stop checking collisions for this step to allow bullet to fly away
+                        break; 
+                    }
+
                     destroyed = true;
                     if (p.hasShield) { p.hasShield = false; playSound('shield_break'); spawnParticle(b.x + b.width/2, b.y + b.height/2, 'shockwave', '#22d3ee', 3, 2); spawnFloatingText(p.x + p.width/2, p.y - 40, TEXT_DICTIONARY[language].shield_broken, "#22d3ee"); break; }
                     p.hp = Math.max(0, p.hp - b.damage); playSound('hurt'); spawnParticle(b.x + b.width/2, b.y + b.height/2, 'spark', b.color, 15, 3);
@@ -545,6 +594,18 @@ const App: React.FC = () => {
 
   const handleStartGame = useCallback(() => {
     playSound('select'); initAudio(); setIsPaused(false); setUltimateAnnounce(null); setNotification(null); shakeTimerRef.current = 0;
+    
+    // Explicitly blur the active element (e.g., Start Button) to return focus to body/window
+    // This fixes the issue where keys like Space or Arrow Keys would trigger button clicks or scrolling
+    // instead of game actions after clicking the UI.
+    if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+    }
+    window.focus();
+
+    // Clear keys to ensure no movement carries over from menu interaction or previous game
+    keysPressed.current.clear();
+
     if (gameOverTimeoutRef.current) clearTimeout(gameOverTimeoutRef.current);
     if (ultimateAnnounceTimeoutRef.current) clearTimeout(ultimateAnnounceTimeoutRef.current);
     

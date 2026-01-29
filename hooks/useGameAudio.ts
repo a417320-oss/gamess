@@ -78,7 +78,7 @@ export const useGameAudio = (isMusicOn: boolean, gameStatus: GameStatus) => {
   }, []);
 
   // Public Sound Effect Trigger
-  const playSound = useCallback((type: 'shoot' | 'hit' | 'hurt' | 'explosion' | 'powerup' | 'win' | 'select' | 'ultimate' | 'shield_break' | 'ultimate_impact' | 'notification' | 'mission_success' | 'mission_fail') => {
+  const playSound = useCallback((type: 'shoot' | 'hit' | 'hurt' | 'explosion' | 'powerup' | 'win' | 'select' | 'ultimate' | 'shield_break' | 'ultimate_impact' | 'notification' | 'mission_success' | 'mission_fail' | 'deflect') => {
     // Master Mute Check
     if (!isMusicOn) return;
     
@@ -110,6 +110,11 @@ export const useGameAudio = (isMusicOn: boolean, gameStatus: GameStatus) => {
         case 'hit': 
             playNoise(0.05, 0.05, true);
             playTone(800, 'triangle', 0.05, 0.1);
+            break;
+        case 'deflect':
+            // High pitched metallic ping
+            playTone(1200, 'sine', 0.05, 0.1, now);
+            playTone(1800, 'triangle', 0.03, 0.05, now);
             break;
         case 'hurt': 
             playNoise(0.1, 0.1);
