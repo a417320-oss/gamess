@@ -1,0 +1,5 @@
+{
+  "name": "Dual Tank Duel",
+  "description": "A turn-based artillery duel game inspired by DDTank/Gunbound. Features 2-player local PvP with physics-based projectiles, destructible-style terrain logic, and an AI commentator powered by Gemini.",
+  "requestFramePermissions": []
+}
